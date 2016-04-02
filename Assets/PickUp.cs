@@ -7,6 +7,7 @@ public class PickUp : MonoBehaviour {
 	GameObject carriedObject;
 	public float distance;
 	public float smooth;
+	public Vector3 rotationDegs;
 	// Use this for initialization
 	void Start() {
 		mainCamera = Camera.main;
@@ -18,26 +19,32 @@ public class PickUp : MonoBehaviour {
 		if(carrying) {
 			carry(carriedObject);
 			checkDrop();
-			//rotateObject();
+			scroll();
+			stopRotate();
 		} else {
 			pickup();
 		}
 	}
 
-	void rotateObject() {
-		carriedObject.transform.Rotate(5, 10, 15);
+	void stopRotate() {
+		if(Input.GetMouseButton(1)) {
+			Vector3 vel = new Vector3(0, 0, 0);
+			carriedObject.GetComponent<Rigidbody>().angularVelocity = vel;
+		}
 	}
 
 	void carry(GameObject o) {
-		Vector3 pos = GameObject.Find("Player").transform.position;
-		o.transform.position = Vector3.Lerp(o.transform.position, mainCamera.transform.position + (mainCamera.transform.forward * -1) * 1, Time.deltaTime * smooth);
-		o.transform.position = pos + Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, -1f)).direction * distance;
-		//o.transform.position += new Vector3(0f, -0.5f, 0f);
-		//o.transform.rotation = Quaternion.identity;
+		Vector3 pos = mainCamera.transform.position;
+		Vector3 targetPos = pos + Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, -0.1f)).direction * distance;
+		Vector3 posDiff = targetPos - o.GetComponentInChildren<Collider>().bounds.center;
+
+		Vector3 newVel = posDiff * 10f;
+		newVel += GameObject.Find("Player").GetComponent<Rigidbody>().velocity;
+		o.GetComponent<Rigidbody>().velocity = newVel;
 	}
 
 	void pickup() {
-		Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, -1f));
+		Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, -0.1f));
 		Debug.DrawRay(Camera.main.transform.position, ray.direction * 10);
 		if(Input.GetKeyDown(KeyCode.E)) {
 			RaycastHit hit;
@@ -45,16 +52,40 @@ public class PickUp : MonoBehaviour {
 			if(Physics.Raycast(Camera.main.transform.position, ray.direction, out hit)) {
 				print(hit.collider);
 				Rigidbody p = hit.collider.gameObject.transform.root.gameObject.GetComponent<Rigidbody>();
-				if(p != null) {
+				if(p != null && !p.gameObject.GetComponent<Rigidbody>().isKinematic) {
+					Vector3 myPos = GameObject.Find("Player").transform.position;
+					distance = (myPos - p.gameObject.transform.position).magnitude;
+					rotationDegs = p.gameObject.transform.rotation.eulerAngles;
 					carrying = true;
 					carriedObject = p.gameObject;
-					p.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+					//p.gameObject.GetComponent<Rigidbody>().isKinematic = true;
 					p.gameObject.GetComponent<Rigidbody>().useGravity = false;
 					Physics.IgnoreCollision(
 						GameObject.Find("Player").GetComponent<Collider>(), 
 						p.gameObject.GetComponentInChildren<Collider>()
 					);
 				}
+			}
+		}
+	}
+
+	void scroll() {
+		Rigidbody r = carriedObject.GetComponent<Rigidbody>();
+		float val = 0;
+		if(Input.GetAxis("Mouse ScrollWheel") < 0) {
+			val = -0.1f;
+		} else if(Input.GetAxis("Mouse ScrollWheel") > 0) {
+			val = 0.1f;
+		}
+		if(val != 0) {
+			if(Input.GetKey(KeyCode.LeftShift)) {
+				r.angularVelocity = new Vector3(r.angularVelocity.x + val, r.angularVelocity.y, r.angularVelocity.z);
+			} else if(Input.GetKey(KeyCode.LeftControl)) {
+				r.angularVelocity = new Vector3(r.angularVelocity.x, r.angularVelocity.y + val, r.angularVelocity.z + val);
+			} else if(Input.GetKey(KeyCode.LeftAlt)) {
+				r.angularVelocity = new Vector3(r.angularVelocity.x, r.angularVelocity.y, r.angularVelocity.z + val);
+			} else {
+				distance += val;
 			}
 		}
 	}
@@ -72,9 +103,9 @@ public class PickUp : MonoBehaviour {
 			false
 		);
 		carrying = false;
-		carriedObject.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+		//carriedObject.gameObject.GetComponent<Rigidbody>().isKinematic = false;
 		carriedObject.gameObject.GetComponent<Rigidbody>().useGravity = true;
-		carriedObject.gameObject.GetComponent<Rigidbody>().velocity = GameObject.Find("Player").GetComponent<Rigidbody>().velocity;
+		//carriedObject.gameObject.GetComponent<Rigidbody>().velocity = GameObject.Find("Player").GetComponent<Rigidbody>().velocity;
 		carriedObject = null;
 	}
 }
