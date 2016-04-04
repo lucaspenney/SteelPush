@@ -6,10 +6,20 @@ ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
     100000: //RootNode
+    100002: Screen
+    100004: Television
     400000: //RootNode
+    400002: Screen
+    400004: Television
     2300000: //RootNode
+    2300002: Screen
+    2300004: Television
     3300000: //RootNode
+    3300002: Screen
+    3300004: Television
     4300000: Cube
+    4300002: Television
+    4300004: Screen
     7400000: Default Take
     9500000: //RootNode
   materials:

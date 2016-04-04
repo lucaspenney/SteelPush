@@ -11,7 +11,6 @@ public class PickUp : MonoBehaviour {
 	// Use this for initialization
 	void Start() {
 		mainCamera = Camera.main;
-		print(mainCamera);
 	}
 	
 	// Update is called once per frame
@@ -50,7 +49,6 @@ public class PickUp : MonoBehaviour {
 			RaycastHit hit;
 
 			if(Physics.Raycast(Camera.main.transform.position, ray.direction, out hit)) {
-				print(hit.collider);
 				Rigidbody p = hit.collider.gameObject.transform.root.gameObject.GetComponent<Rigidbody>();
 				if(p != null && !p.gameObject.GetComponent<Rigidbody>().isKinematic) {
 					Vector3 myPos = GameObject.Find("Player").transform.position;
